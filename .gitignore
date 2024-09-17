@@ -1,0 +1,19 @@
+# Pliki i foldery dla .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Pliki i foldery dla Node.js
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Pliki systemowe
+.DS_Store
+Thumbs.db
+
+# Pliki IDE
+.idea/
