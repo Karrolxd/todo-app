@@ -1,82 +1,84 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using ToDoApi.Data;
 using ToDoApi.DTOs;
+using ToDoApi.Models;
 
-namespace ToDoApi.Services;
-
-public class AuthService : IAuthService
+namespace ToDoApi.Services
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly IConfiguration _configuration;
-    public AuthService(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IConfiguration configuration)
+    public class AuthService : IAuthService
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _configuration = configuration;
-    }
-    public async Task<string> RegisterUserAsync(RegisterDto registerDto)
-    {
-        //Checking if user already exists
-        var userExists = await _userManager.FindByEmailAsync(registerDto.Email);
-        if (userExists != null)
-        {
-            return "User already exists!";
-        }
-        
-        //Creating a new IdentityUser
-        var user = new IdentityUser()
-        {
-            Email = registerDto.Email,
-            UserName = registerDto.Email
-        };
-        
-        //Creating the user with hashed password
-        var result = await _userManager.CreateAsync(user, registerDto.Password);
-        if (!result.Succeeded)
-        {
-            return "An error occurred while creating the user!";
-        }
-        
-        return "User created successfully!";
-    }
+        private readonly ToDoApiDbContext _context;
+        private readonly IConfiguration _configuration;
 
-    public async Task<string> LoginUserAsync(LoginDto loginDto)
-    {
-        //Checking if user exists
-        var user = await _userManager.FindByEmailAsync(loginDto.Email);
-        if (user == null)
+        public AuthService(ToDoApiDbContext context, IConfiguration configuration)
         {
-            return "Invalid email or password!";
+            _context = context;
+            _configuration = configuration;
         }
-        
-        //Signing in the user
-        var result = await _signInManager.PasswordSignInAsync(user, loginDto.Password, false, false);
-        if (!result.Succeeded)
+
+        public async Task<string> RegisterUserAsync(RegisterDto registerDto)
         {
-            return "Invalid email or password!";
+            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            {
+                return "User already exists!";
+            }
+            
+            var user = new User
+            {
+                Email = registerDto.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password)
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return "User created successfully!";
         }
-        
-        //Generating JWT token
-        var authClaims = new List<Claim>
+
+        public async Task<string> LoginUserAsync(LoginDto loginDto)
         {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-        
-        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]));
-        
-        var token = new JwtSecurityToken(
-            issuer: _configuration["JwtSettings:Issuer"],
-            audience: _configuration["JwtSettings:Audience"],
-            expires: DateTime.Now.AddMinutes(30),
-            claims: authClaims,
-            signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-        );
-        
-        return new JwtSecurityTokenHandler().WriteToken(token);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            {
+                return "Invalid email or password!";
+            }
+
+            return GenerateJwtToken(user);
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            // Walidacja klucza JWT
+            var key = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException("Jwt:Key", "JWT secret key is not provided in the configuration.");
+            }
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var creds = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(30),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
     }
 }
