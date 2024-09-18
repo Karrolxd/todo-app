@@ -1,0 +1,37 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <h2 class="text-center mb-4">Register</h2>
+
+      <form (ngSubmit)="onRegister()">
+        <!-- Email -->
+        <div class="form-group mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" class="form-control" [(ngModel)]="email" name="email" required placeholder="Enter your email">
+        </div>
+
+        <!-- Password -->
+        <div class="form-group mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" class="form-control" [(ngModel)]="password" name="password" required minlength="6" placeholder="Enter your password">
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group mb-3">
+          <label for="confirmPassword" class="form-label">Confirm Password</label>
+          <input type="password" id="confirmPassword" class="form-control" [(ngModel)]="confirmPassword" name="confirmPassword" required minlength="6" placeholder="Confirm your password">
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary w-100" [disabled]="!email || !password || !confirmPassword">
+          Register
+        </button>
+      </form>
+
+      <!-- Validation Alert for Password Match -->
+      <div *ngIf="password !== confirmPassword && confirmPassword" class="alert alert-danger mt-3" role="alert">
+        Passwords do not match!
+      </div>
+    </div>
+  </div>
+</div>
