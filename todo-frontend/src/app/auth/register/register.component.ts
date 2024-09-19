@@ -31,8 +31,6 @@ export class RegisterComponent {
       confirmPassword: this.confirmPassword
     };
 
-    console.log(newUser);
-
     this.authService.register(newUser).subscribe(
       response => {
         this.router.navigate(['/login']);

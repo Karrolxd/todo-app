@@ -1,0 +1,58 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header text-center">
+          <h3>Login</h3>
+        </div>
+        <div class="card-body">
+          <!-- Formularz logowania -->
+          <form (ngSubmit)="onLogin()">
+            <!-- Email -->
+            <div class="form-group mb-3">
+              <label for="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                [(ngModel)]="email"
+                name="email"
+                required
+                placeholder="Enter your email"
+              />
+            </div>
+
+            <!-- Password -->
+            <div class="form-group mb-3">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                class="form-control"
+                [(ngModel)]="password"
+                name="password"
+                required
+                placeholder="Enter your password"
+              />
+            </div>
+
+            <!-- Error message -->
+            <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+              {{ errorMessage }}
+            </div>
+
+            <!-- Login button -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">
+                Login
+              </button>
+            </div>
+          </form>
+        </div>
+        <div class="card-footer text-center">
+          <a href="/register">Don't have an account? Register here</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
