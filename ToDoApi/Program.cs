@@ -27,12 +27,6 @@ builder.Services.AddAuthentication(options =>
     })
     .AddJwtBearer(options =>
     {
-        var key = builder.Configuration["Jwt:Key"];
-        if (string.IsNullOrEmpty(key))
-        {
-            throw new ArgumentNullException("Jwt:Key", "JWT secret key is not provided in the configuration.");
-        }
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -41,9 +35,11 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))  // Tutaj wywoływany jest Encoding.GetBytes, który potrzebuje niepustego klucza
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
+
+
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -66,7 +62,7 @@ builder.Services.AddSwaggerGen();
 
 // Register IAuthService and AuthService
 builder.Services.AddScoped<IAuthService, AuthService>();
-
+builder.Services.AddScoped<ITaskService, TaskService>();
 var app = builder.Build();
 
 // Configure middleware

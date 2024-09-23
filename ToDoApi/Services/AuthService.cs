@@ -54,7 +54,6 @@ namespace ToDoApi.Services
 
         private string GenerateJwtToken(User user)
         {
-            // Walidacja klucza JWT
             var key = _configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(key))
             {
@@ -64,7 +63,8 @@ namespace ToDoApi.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("userId", user.Id.ToString()) // Dodanie userId jako claim
             };
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -80,5 +80,6 @@ namespace ToDoApi.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
 }

@@ -1,0 +1,32 @@
+<div class="container mt-4">
+  <h2>{{ isEditMode ? 'Edit Task' : 'Add Task' }}</h2>
+
+  <form (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" class="form-control" id="title" [(ngModel)]="task.title" name="title" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea class="form-control" id="description" [(ngModel)]="task.description" name="description"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="dueDate" class="form-label">Due Date</label>
+      <input type="date" class="form-control" id="dueDate" [(ngModel)]="task.dueDate" name="dueDate">
+    </div>
+
+    <div class="mb-3">
+      <label for="priority" class="form-label">Priority</label>
+      <select class="form-select" id="priority" [(ngModel)]="task.priority" name="priority">
+        <option value="">Select Priority</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ isEditMode ? 'Update Task' : 'Create Task' }}</button>
+  </form>
+</div>
